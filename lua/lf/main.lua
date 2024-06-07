@@ -169,6 +169,7 @@ function Lf:__set_cmd_wrapper()
     if
         self.cfg.focus_on_open
         and fs.dirname(self.curfile) == self.term.dir
+        and uv.fs_stat(self.curfile)
     then
         open_on = self.curfile
     end
@@ -298,7 +299,7 @@ end
 function Lf:__set_argv()
     local args = {}
     for _, arg in ipairs(fn.argv()) do
-        if api.nvim_buf_is_loaded(fn.bufnr(arg)) then
+        if uv.fs_stat(arg) and api.nvim_buf_is_loaded(fn.bufnr(arg)) then
             table.insert(args, uv.fs_realpath(arg))
         end
     end
