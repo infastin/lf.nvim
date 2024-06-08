@@ -28,8 +28,12 @@ local default = {
     dir = "",
     direction = "float",
     border = "double",
-    height = fn.float2nr(fn.round(0.75 * o.lines)),
-    width = fn.float2nr(fn.round(0.75 * o.columns)),
+    height = function()
+      return fn.float2nr(fn.round(0.75 * o.lines))
+    end,
+    width = function()
+      return fn.float2nr(fn.round(0.75 * o.columns))
+    end,
     escape_quit = false,
     focus_on_open = true,
     mappings = true,
@@ -70,8 +74,8 @@ local function validate(cfg)
         dir = {cfg.dir, "s", false},
         direction = {cfg.direction, "s", false},
         border = {cfg.border, {"s", "t"}, false},
-        height = {cfg.height, {"n", "s"}, false},
-        width = {cfg.width, {"n", "s"}, false},
+        height = {cfg.height, {"n", "s", "f"}, false},
+        width = {cfg.width, {"n", "s", "f"}, false},
         escape_quit = {cfg.escape_quit, "b", false},
         focus_on_open = {cfg.focus_on_open, "b", false},
         mappings = {cfg.mappings, "b", false},
@@ -89,8 +93,9 @@ local function validate(cfg)
     })
 
     cfg.winblend = tonumber(cfg.winblend) --[[@as number]]
-    cfg.height = tonumber(cfg.height) --[[@as number]]
-    cfg.width = tonumber(cfg.width) --[[@as number]]
+    cfg.height = type(cfg.height) == "string" and tonumber(cfg.height) or cfg.height
+    cfg.width = type(cfg.width) == "string" and tonumber(cfg.width) or cfg.width
+
     return cfg
 end
 
@@ -172,8 +177,8 @@ return setmetatable(Config, {
 ---@field dir? Lf.directory Directory where `lf` starts ('gwd' is git-working-directory, ""/nil is CWD)
 ---@field direction? Lf.direction Window layout
 ---@field border? Lf.border Border kind
----@field width? integer Width of the *floating* window
----@field height? integer Height of the *floating* window
+---@field width? integer|function Width of the *floating* window
+---@field height? integer|function Height of the *floating* window
 ---@field escape_quit? boolean Whether escape should be mapped to quit
 ---@field focus_on_open? boolean Whether Lf should open focused on current file
 ---@field mappings? boolean Whether terminal buffer mappings should be set

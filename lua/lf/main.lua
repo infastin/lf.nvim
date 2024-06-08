@@ -32,7 +32,6 @@ local Terminal = require("toggleterm.terminal").Terminal
 ---@field tmp_lastdir string Path to a file containing the last directory `lf` was in
 ---@field id number? Current `lf` session id
 ---@field bufnr number The open file's buffer number
----@field arglist string[] The argument list to neovim
 ---@field action string The current action to open the file
 ---@field signcolumn string The signcolumn set by the user before the terminal buffer overrides it
 local Lf = {}
@@ -72,7 +71,6 @@ function Lf:new(config)
         self.cfg = Config.data
     end
 
-    self:__set_argv()
     self.bufnr = 0
     self.view_idx = 1
     self.action = self.cfg.default_action
@@ -274,16 +272,9 @@ function Lf:__callback(term)
     elseif uv.fs_stat(self.tmp_sel) then
         term:close()
         for fname in io.lines(self.tmp_sel) do
-            local stat = uv.fs_stat(fname)
-            if type(stat) == "table" then
+            if uv.fs_stat(fname) then
                 local fesc = fn.fnameescape(fname)
                 cmd(("%s %s"):format(self.action, fesc))
-                local args = table.concat(self.arglist, " ")
-                if string.len(args) > 0 then
-                  cmd.argadd(args)
-                  cmd.argdedupe()
-                end
-                self:__set_argv()
             end
         end
     end
@@ -292,18 +283,6 @@ function Lf:__callback(term)
     vim.defer_fn(function()
         self.action = self.cfg.default_action
     end, 1)
-end
-
----@private
----Set the arglist value
-function Lf:__set_argv()
-    local args = {}
-    for _, arg in ipairs(fn.argv()) do
-        if uv.fs_stat(arg) and api.nvim_buf_is_loaded(fn.bufnr(arg)) then
-            table.insert(args, uv.fs_realpath(arg))
-        end
-    end
-    self.arglist = args
 end
 
 return Lf
